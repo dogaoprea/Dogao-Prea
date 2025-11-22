@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>App de Pedidos - DOGÃO PREÁ</title>
+    
+    <!-- Fontes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        /* --- VARIAVEIS & RESET --- */
+        :root {
+            --primary: #ff9f1c;
+            --primary-dark: #e08b15;
+            --bg-dark: #121212;
+            --bg-card: #1e1e1e;
+            --text-light: #f3f4f6;
+            --text-gray: #9ca3af;
+            --whatsapp: #25D366;
+            --danger: #ff4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            line-height: 1.6;
+            padding-bottom: 80px; /* Espaço para o carrinho flutuante */
+        }
+
+        h1, h2, h3, .brand-font {
+            font-family: 'Bebas Neue', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* --- UTILITARIOS --- */
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .btn { cursor: pointer; border: none; outline: none; transition: 0.2s; font-weight: 700; border-radius: 50px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-primary { background-color: var(--primary); color: #000; padding: 10px 25px; }
+        .btn-primary:hover { background-color: var(--primary-dark); transform: translateY(-2px); }
+        
+        /* --- HEADER --- */
+        header {
+            background-color: rgba(18, 18, 18, 0.95);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid #333;
+            padding: 15px 0;
+        }
+        .nav-flex { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 24px; color: var(--primary); }
+
+        /* --- CATEGORIAS --- */
+        .category-nav {
+            position: sticky;
+            top: 60px; /* Logo abaixo do header */
+            background-color: var(--bg-dark);
+            z-index: 90;
+            padding: 15px 0;
+            overflow-x: auto;
+            white-space: nowrap;
+            border-bottom: 1px solid #333;
+        }
+        .category-list { display: flex; gap: 10px; padding: 0 20px; list-style: none; }
+        .cat-btn {
+            background: #2d2d2d; border: 1px solid #444; color: #fff;
+            padding: 8px 20px; border-radius: 20px; font-size: 14px; font-weight: 600;
+        }
+        .cat-btn.active { background: var(--primary); color: #000; border-color: var(--primary); }
+
+        /* --- GRID DE PRODUTOS --- */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .menu-item {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid #333;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .item-content { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
+        .item-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .item-title { font-weight: 700; font-size: 18px; color: #fff; }
+        .item-price { color: var(--primary); font-weight: 700; font-size: 18px; }
+        .item-desc { font-size: 13px; color: var(--text-gray); margin-bottom: 15px; flex-grow: 1; }
+        
+        .add-btn {
+            width: 100%; background: #2d2d2d; color: #fff; padding: 12px;
+            border-radius: 8px; font-weight: 600; border: 1px solid #444;
+        }
+        .add-btn:hover { background: var(--whatsapp); border-color: var(--whatsapp); }
+
+        /* --- CARRINHO FLUTUANTE (FAB) --- */
+        .floating-cart {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            left: 20px;
+            background-color: var(--primary);
+            color: #000;
+            padding: 15px 25px;
+            border-radius: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            cursor: pointer;
+            z-index: 1000;
+            transition: transform 0.3s;
+            animation: popUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .floating-cart:active { transform: scale(0.95); }
+        .cart-count { background: #000; color: var(--primary); padding: 2px 8px; border-radius: 10px; font-size: 12px; margin-left: 5px; }
+        .hidden { display: none !important; }
+
+        @keyframes popUp { from { transform: translateY(100px); } to { transform: translateY(0); } }
+
+        /* --- MODAL DO CARRINHO --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 2000;
+            display: flex; justify-content: center; align-items: flex-end;
+            opacity: 0; pointer-events: none; transition: 0.3s;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+        
+        .modal-content {
+            background: var(--bg-card);
+            width: 100%; max-width: 600px;
+            height: 90vh; /* Sheet style */
+            border-radius: 20px 20px 0 0;
+            padding: 25px;
+            display: flex; flex-direction: column;
+            transform: translateY(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+        }
+        .modal-overlay.open .modal-content { transform: translateY(0); }
+
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 15px; }
+        .close-modal { background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; }
+
+        /* --- ESTILOS DO CHECKOUT --- */
+        .cart-items { margin-bottom: 20px; }
+        .cart-item-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: #252525; padding: 10px; border-radius: 8px; }
+        .cart-item-info h4 { font-size: 14px; color: #fff; }
+        .cart-item-info span { font-size: 12px; color: var(--primary); }
+        .qty-controls { display: flex; align-items: center; gap: 10px; }
+        .qty-btn { background: #333; color: #fff; width: 25px; height: 25px; border-radius: 50%; border: none; cursor: pointer; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; margin-bottom: 5px; font-size: 14px; color: #aaa; }
+        .form-input, .form-select { 
+            width: 100%; padding: 12px; background: #121212; border: 1px solid #333; 
+            color: #fff; border-radius: 8px; font-family: inherit; font-size: 16px;
+        }
+        .form-input:focus { border-color: var(--primary); outline: none; }
+
+        .radio-group { display: flex; gap: 15px; flex-wrap: wrap; }
+        .radio-option {
+            flex: 1; position: relative;
+        }
+        .radio-option input { display: none; }
+        .radio-option label {
+            display: block; padding: 10px; text-align: center; background: #252525; 
+            border: 1px solid #444; border-radius: 8px; cursor: pointer; font-size: 13px; transition: 0.2s;
+        }
+        .radio-option input:checked + label { background: var(--primary); color: #000; border-color: var(--primary); font-weight: 700; }
+
+        .geo-btn {
+            background: #25D366; color: #fff; width: 100%; margin-top: 10px;
+            border: none; padding: 10px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .geo-status { font-size: 12px; color: #aaa; margin-top: 5px; text-align: center; }
+        .geo-success { color: var(--whatsapp); }
+
+        .cart-total { font-size: 24px; color: var(--primary); text-align: right; margin: 20px 0; border-top: 1px solid #333; padding-top: 15px; }
+        
+        .btn-whatsapp { width: 100%; background: var(--whatsapp); color: #fff; padding: 15px; border-radius: 10px; font-size: 18px; }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="container nav-flex">
+            <div class="logo brand-font">DOGÃO PREÁ</div>
+        </div>
+    </header>
+
+    <!-- Navegação Categorias -->
+    <nav class="category-nav">
+        <ul class="category-list" id="category-list">
+            <!-- Preenchido via JS -->
+        </ul>
+    </nav>
+
+    <!-- Conteúdo Principal -->
+    <div class="container">
+        <div id="menu-container">
+            <!-- Preenchido via JS -->
+        </div>
+    </div>
+
+    <!-- Botão Flutuante do Carrinho -->
+    <div id="floating-cart" class="floating-cart hidden" onclick="toggleCart()">
+        <span><i class="fas fa-shopping-bag"></i> Ver Sacola <span id="cart-count" class="cart-count">0</span></span>
+        <span id="cart-total-float">R$ 0,00</span>
+    </div>
+
+    <!-- Modal de Checkout -->
+    <div class="modal-overlay" id="cart-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="brand-font">Seu Pedido</h2>
+                <button class="close-modal" onclick="toggleCart()"><i class="fas fa-times"></i></button>
+            </div>
+
+            <!-- Lista de Itens -->
+            <div id="cart-items" class="cart-items">
+                <p style="text-align: center; color: #666;">Seu carrinho está vazio.</p>
+            </div>
+
+            <!-- Total -->
+            <div class="cart-total brand-font" id="modal-total">R$ 0,00</div>
+
+            <!-- Formulário de Checkout -->
+            <div id="checkout-form" style="display: none;">
+                <h3 class="brand-font" style="margin-bottom: 15px; color: var(--primary);">Dados para Entrega</h3>
+                
+                <div class="form-group">
+                    <label class="form-label">Seu Nome*</label>
+                    <input type="text" id="customer-name" class="form-input" placeholder="Ex: João da Silva">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Tipo de Pedido*</label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" name="orderType" id="type-delivery" value="Entrega" onchange="toggleAddressField(true)">
+                            <label for="type-delivery"><i class="fas fa-motorcycle"></i> Entrega</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" name="orderType" id="type-pickup" value="Retirada" onchange="toggleAddressField(false)">
+                            <label for="type-pickup"><i class="fas fa-box"></i> Retirada</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" name="orderType" id="type-eatin" value="Mesa" onchange="toggleAddressField(false)">
+                            <label for="type-eatin"><i class="fas fa-utensils"></i> Mesa</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Campo de Endereço (Condicional) -->
+                <div id="address-section" class="form-group hidden">
+                    <label class="form-label">Localização*</label>
+                    <button type="button" class="geo-btn" onclick="getLocation()">
+                        <i class="fas fa-map-marker-alt"></i> Usar Localização Atual (GPS)
+                    </button>
+                    <div id="geo-status" class="geo-status"></div>
+                    
+                    <label class="form-label" style="margin-top: 10px;">Ou digite o endereço/ponto de referência:</label>
+                    <textarea id="address-text" class="form-input" rows="2" placeholder="Rua, Número, Bairro..."></textarea>
+                    <input type="hidden" id="maps-link">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Forma de Pagamento*</label>
+                    <select id="payment-method" class="form-select">
+                        <option value="PIX">PIX</option>
+                        <option value="Cartão de Crédito">Cartão de Crédito</option>
+                        <option value="Cartão de Débito">Cartão de Débito</option>
+                        <option value="Dinheiro">Dinheiro (Precisa de troco?)</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-whatsapp" onclick="finalizeOrder()">
+                    <i class="fab fa-whatsapp"></i> ENVIAR PEDIDO
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DADOS DO CARDÁPIO ---
+        const menuData = [
+            { id: 1, name: "Queijo e Ovos", price: 10.00, category: "sanduiches", desc: "Pão, queijo e ovos." },
+            { id: 2, name: "Hambúrguer", price: 10.00, category: "sanduiches", desc: "Pão, carne e salada." },
+            { id: 3, name: "X-Burguer", price: 12.00, category: "sanduiches", desc: "Pão, carne e queijo." },
+            { id: 4, name: "X-Salada", price: 12.00, category: "sanduiches", desc: "Pão, carne, queijo e salada." },
+            { id: 5, name: "X-Tudo", price: 18.00, category: "especiais", desc: "O GIGANTE: Carne, frango, bacon, ovos..." },
+            { id: 6, name: "X-Bacon", price: 15.00, category: "especiais", desc: "Carne, queijo e muito bacon." },
+            { id: 7, name: "Dogão Pão Árabe", price: 18.00, category: "especiais", desc: "Pão árabe completo." },
+            { id: 8, name: "Hot-Dog Simples", price: 12.00, category: "hotdogs", desc: "Salsicha, molho, batata." },
+            { id: 9, name: "Hot-Scooby", price: 14.00, category: "hotdogs", desc: "2 Salsichas e queijo." },
+            { id: 10, name: "Pastel Carne", price: 12.00, category: "pasteis", desc: "Carne moída temperada." },
+            { id: 11, name: "Pastel Queijo", price: 10.00, category: "pasteis", desc: "Muito queijo derretido." },
+            { id: 12, name: "Fritas (P)", price: 15.00, category: "bebidas", desc: "Porção individual." },
+            { id: 13, name: "Coca-Cola Lata", price: 5.00, category: "bebidas", desc: "350ml gelada." }
+        ];
+
+        const categories = [
+            { id: 'sanduiches', label: 'Sanduíches' },
+            { id: 'especiais', label: 'Especiais' },
+            { id: 'hotdogs', label: 'Hot Dogs' },
+            { id: 'pasteis', label: 'Pastéis' },
+            { id: 'bebidas', label: 'Bebidas' }
+        ];
+
+        // --- ESTADO DO APP ---
+        let cart = [];
+
+        // --- INICIALIZAÇÃO ---
+        window.onload = () => {
+            renderCategories();
+            renderMenu();
+        };
+
+        // Renderizar Categorias
+        function renderCategories() {
+            const list = document.getElementById('category-list');
+            list.innerHTML = `<li><button class="cat-btn active" onclick="filterMenu('all', this)">Todos</button></li>` + 
+                categories.map(c => `<li><button class="cat-btn" onclick="filterMenu('${c.id}', this)">${c.label}</button></li>`).join('');
+        }
+
+        // Renderizar Menu
+        function renderMenu(filter = 'all') {
+            const container = document.getElementById('menu-container');
+            const itemsToShow = filter === 'all' ? menuData : menuData.filter(i => i.category === filter);
+            
+            container.innerHTML = `
+                <div class="menu-grid">
+                    ${itemsToShow.map(item => `
+                        <div class="menu-item">
+                            <div class="item-content">
+                                <div class="item-header">
+                                    <span class="item-title">${item.name}</span>
+                                    <span class="item-price">R$ ${item.price.toFixed(2).replace('.',',')}</span>
+                                </div>
+                                <p class="item-desc">${item.desc}</p>
+                                <button class="btn add-btn" onclick="addToCart(${item.id})">
+                                    ADICIONAR <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function filterMenu(catId, btnElement) {
+            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+            btnElement.classList.add('active');
+            renderMenu(catId);
+        }
+
+        // --- LÓGICA DO CARRINHO ---
+        function addToCart(id) {
+            const item = menuData.find(i => i.id === id);
+            const existing = cart.find(i => i.id === id);
+
+            if (existing) {
+                existing.qty++;
+            } else {
+                cart.push({ ...item, qty: 1 });
+            }
+            updateCartUI();
+            
+            // Feedback visual simples (vibração se mobile)
+            if (navigator.vibrate) navigator.vibrate(50);
+        }
+
+        function updateQty(id, change) {
+            const item = cart.find(i => i.id === id);
+            if (item) {
+                item.qty += change;
+                if (item.qty <= 0) {
+                    cart = cart.filter(i => i.id !== id);
+                }
+            }
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const totalQty = cart.reduce((acc, item) => acc + item.qty, 0);
+            const totalPrice = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+
+            // Atualiza botão flutuante
+            const floatBtn = document.getElementById('floating-cart');
+            document.getElementById('cart-count').innerText = totalQty;
+            document.getElementById('cart-total-float').innerText = `R$ ${totalPrice.toFixed(2).replace('.',',')}`;
+            
+            if (totalQty > 0) {
+                floatBtn.classList.remove('hidden');
+                document.getElementById('checkout-form').style.display = 'block';
+            } else {
+                floatBtn.classList.add('hidden');
+                document.getElementById('checkout-form').style.display = 'none';
+                // Se estiver vazio e modal aberto, pode fechar ou mostrar msg vazio
+            }
+
+            // Atualiza Lista no Modal
+            const list = document.getElementById('cart-items');
+            if (cart.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: #666; margin: 20px;">Carrinho vazio...</p>';
+            } else {
+                list.innerHTML = cart.map(item => `
+                    <div class="cart-item-row">
+                        <div class="cart-item-info">
+                            <h4>${item.name}</h4>
+                            <span>R$ ${(item.price * item.qty).toFixed(2).replace('.',',')}</span>
+                        </div>
+                        <div class="qty-controls">
+                            <button class="qty-btn" onclick="updateQty(${item.id}, -1)">-</button>
+                            <span style="color: #fff; font-weight: bold;">${item.qty}</span>
+                            <button class="qty-btn" onclick="updateQty(${item.id}, 1)">+</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            document.getElementById('modal-total').innerText = `Total: R$ ${totalPrice.toFixed(2).replace('.',',')}`;
+        }
+
+        function toggleCart() {
+            const modal = document.getElementById('cart-modal');
+            modal.classList.toggle('open');
+        }
+
+        // --- LÓGICA DE FORMULÁRIO & GEO ---
+        function toggleAddressField(show) {
+            const el = document.getElementById('address-section');
+            if (show) el.classList.remove('hidden');
+            else el.classList.add('hidden');
+        }
+
+        function getLocation() {
+            const status = document.getElementById('geo-status');
+            const mapsInput = document.getElementById('maps-link');
+            
+            if (!navigator.geolocation) {
+                status.innerText = "Geolocalização não suportada pelo navegador.";
+                return;
+            }
+
+            status.innerText = "Localizando...";
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const link = `https://maps.google.com/?q=${lat},${lng}`;
+                    
+                    mapsInput.value = link;
+                    status.innerHTML = `<span class="geo-success"><i class="fas fa-check-circle"></i> Localização gravada!</span>`;
+                },
+                () => {
+                    status.innerText = "Erro ao obter localização. Por favor, digite o endereço abaixo.";
+                }
+            );
+        }
+
+        function finalizeOrder() {
+            // Validação Básica
+            const name = document.getElementById('customer-name').value;
+            const typeRadio = document.querySelector('input[name="orderType"]:checked');
+            const payment = document.getElementById('payment-method').value;
+            
+            if (!name) return alert("Por favor, digite seu nome.");
+            if (!typeRadio) return alert("Escolha o tipo de pedido.");
+            
+            const type = typeRadio.value;
+            let addressMsg = "";
+
+            if (type === 'Entrega') {
+                const mapsLink = document.getElementById('maps-link').value;
+                const addressText = document.getElementById('address-text').value;
+                
+                if (!mapsLink && !addressText) return alert("Para entrega, precisamos da localização GPS ou do endereço escrito.");
+                
+                if (mapsLink) addressMsg += `\n📍 *GPS:* ${mapsLink}`;
+                if (addressText) addressMsg += `\n🏠 *Endereço:* ${addressText}`;
+            }
+
+            // Montar Mensagem WhatsApp
+            let msg = `*NOVO PEDIDO - DOGÃO PREÁ*\n----------------------------\n`;
+            msg += `👤 *Cliente:* ${name}\n`;
+            msg += `📦 *Tipo:* ${type}\n`;
+            msg += `💰 *Pagamento:* ${payment}\n\n`;
+            
+            msg += `*ITENS:*\n`;
+            cart.forEach(item => {
+                msg += `${item.qty}x ${item.name} (R$ ${(item.price * item.qty).toFixed(2)})\n`;
+            });
+
+            const total = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
+            msg += `\n*TOTAL: R$ ${total.toFixed(2).replace('.',',')}*`;
+            
+            if (addressMsg) {
+                msg += `\n\n*LOCAL DE ENTREGA:*${addressMsg}`;
+            }
+
+            // Enviar
+            const phone = "5588996768158";
+            const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>
