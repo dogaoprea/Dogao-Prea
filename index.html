@@ -24,6 +24,8 @@
             --text-gray: #9ca3af;
             --whatsapp: #25D366;
             --danger: #ff4444;
+            --info-bg: rgba(59, 130, 246, 0.15);
+            --info-text: #60a5fa;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
@@ -93,6 +95,22 @@
             outline: none;
         }
         .search-icon { color: var(--text-gray); }
+
+        /* Aviso de busca (oculto por padrão) */
+        .search-helper {
+            margin-top: 10px;
+            background-color: var(--info-bg);
+            color: var(--info-text);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid var(--info-text);
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
         /* --- CATEGORIAS --- */
         .category-nav {
@@ -281,6 +299,11 @@
                 <i class="fas fa-search search-icon"></i>
                 <input type="text" class="search-input" id="search-input" placeholder="O que você procura hoje?" oninput="searchProducts(this.value)">
             </div>
+            <!-- Aviso de Busca (Dinâmico) -->
+            <div id="search-helper" class="search-helper hidden">
+                <i class="fas fa-info-circle"></i>
+                <span>Marcas e sabores serão combinados no WhatsApp após o pedido.</span>
+            </div>
         </div>
     </div>
 
@@ -386,6 +409,7 @@
 
     <script>
         // --- DADOS DO CARDÁPIO ATUALIZADOS ---
+        // Adicionei a propriedade 'keywords' para facilitar a busca
         const menuData = [
             // Sanduíches Econômicos & Tradicionais
             { id: 1, name: "Queijo e Ovos", price: 10.00, category: "sanduiches", desc: "Pão, queijo e ovos." },
@@ -430,11 +454,40 @@
             { id: 30, name: "Batata Frita (G)", price: 20.00, category: "bebidas", desc: "Porção Grande." },
             { id: 31, name: "Batata Recheada", price: 35.00, category: "bebidas", desc: "Batata frita, bacon e calabresa." },
             { id: 32, name: "Sucos Naturais", price: 0.00, category: "bebidas", desc: "Valores a consultar." },
-            // Refrigerantes Separados
-            { id: 33, name: "Refrigerante Lata", price: 0.00, category: "bebidas", desc: "350ml. Sabor a combinar." },
-            { id: 34, name: "Refrigerante 1 Litro", price: 0.00, category: "bebidas", desc: "Sabor a combinar." },
-            { id: 35, name: "Refrigerante 1.5 Litros", price: 0.00, category: "bebidas", desc: "Sabor a combinar." },
-            { id: 36, name: "Refrigerante 2 Litros", price: 0.00, category: "bebidas", desc: "Sabor a combinar." }
+            
+            // Refrigerantes Separados (Com Keywords para busca)
+            { 
+                id: 33, 
+                name: "Refrigerante Lata", 
+                price: 0.00, 
+                category: "bebidas", 
+                desc: "350ml. Sabor a combinar.",
+                keywords: ["coca", "cola", "fanta", "guarana", "guaraná", "pepsi", "sprite", "sukita", "kuat", "soda", "antarctica"] 
+            },
+            { 
+                id: 34, 
+                name: "Refrigerante 1 Litro", 
+                price: 0.00, 
+                category: "bebidas", 
+                desc: "Sabor a combinar.",
+                keywords: ["coca", "cola", "fanta", "guarana", "guaraná", "pepsi", "sprite", "sukita", "kuat", "soda", "antarctica"] 
+            },
+            { 
+                id: 35, 
+                name: "Refrigerante 1.5 Litros", 
+                price: 0.00, 
+                category: "bebidas", 
+                desc: "Sabor a combinar.",
+                keywords: ["coca", "cola", "fanta", "guarana", "guaraná", "pepsi", "sprite", "sukita", "kuat", "soda", "antarctica"] 
+            },
+            { 
+                id: 36, 
+                name: "Refrigerante 2 Litros", 
+                price: 0.00, 
+                category: "bebidas", 
+                desc: "Sabor a combinar.",
+                keywords: ["coca", "cola", "fanta", "guarana", "guaraná", "pepsi", "sprite", "sukita", "kuat", "soda", "antarctica"] 
+            }
         ];
 
         const categories = [
@@ -485,20 +538,34 @@
         // Função de Busca Global
         function searchProducts(query) {
             const term = query.toLowerCase().trim();
-            
-            // Remove classe 'active' de todos os botões de categoria se houver busca
             const catButtons = document.querySelectorAll('.cat-btn');
+            const helper = document.getElementById('search-helper');
+
+            // Lógica de detecção de marcas de refrigerante
+            const sodaBrands = ["coca", "cola", "fanta", "guarana", "guaraná", "pepsi", "sprite", "sukita", "kuat", "soda", "antarctica", "refri"];
+            const isSodaSearch = sodaBrands.some(brand => term.includes(brand));
+
+            // Exibir/Ocultar aviso de sabor
+            if(isSodaSearch) {
+                helper.classList.remove('hidden');
+            } else {
+                helper.classList.add('hidden');
+            }
             
             if (term.length > 0) {
                 catButtons.forEach(btn => btn.classList.remove('active'));
-                // Filtra globalmente
-                const filtered = menuData.filter(item => 
-                    item.name.toLowerCase().includes(term) || 
-                    item.desc.toLowerCase().includes(term)
-                );
+                // Filtra globalmente (Nome, Descrição OU Keywords ocultas)
+                const filtered = menuData.filter(item => {
+                    const nameMatch = item.name.toLowerCase().includes(term);
+                    const descMatch = item.desc.toLowerCase().includes(term);
+                    const keywordMatch = item.keywords ? item.keywords.some(k => k.includes(term)) : false;
+                    
+                    return nameMatch || descMatch || keywordMatch;
+                });
                 renderGrid(filtered, term);
             } else {
-                // Se limpar a busca, volta para 'Todos'
+                // Se limpar a busca, volta para 'Todos' e esconde aviso
+                helper.classList.add('hidden');
                 filterMenu('all', document.querySelector('.cat-btn'));
             }
         }
@@ -543,6 +610,7 @@
         function renderMenu(filter = 'all') {
             // Limpa campo de busca ao trocar de categoria
             document.getElementById('search-input').value = '';
+            document.getElementById('search-helper').classList.add('hidden');
             
             const itemsToShow = filter === 'all' ? menuData : menuData.filter(i => i.category === filter);
             renderGrid(itemsToShow);
@@ -553,8 +621,6 @@
             // Se o btnElement for null (chamada manual), tenta pegar o botão "Todos" ou o correspondente
             if (btnElement) {
                 btnElement.classList.add('active');
-            } else {
-                // Fallback visual opcional
             }
             renderMenu(catId);
         }
