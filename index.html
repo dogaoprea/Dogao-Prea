@@ -26,6 +26,7 @@
             --danger: #ff4444;
             --info-bg: rgba(59, 130, 246, 0.15);
             --info-text: #60a5fa;
+            --ai-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
@@ -62,11 +63,17 @@
         }
         .nav-flex { display: flex; justify-content: space-between; align-items: center; }
         .logo { font-size: 24px; color: var(--primary); }
+        
+        .header-actions { display: flex; gap: 10px; }
+        .icon-btn { background: transparent; color: #fff; border: 1px solid #444; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        .icon-btn:hover { background: #333; border-color: #666; }
 
         /* --- BARRA DE BUSCA --- */
         .search-container {
             margin-top: 20px;
             margin-bottom: 10px;
+            display: flex;
+            gap: 10px;
         }
         .search-box {
             width: 100%;
@@ -95,6 +102,25 @@
             outline: none;
         }
         .search-icon { color: var(--text-gray); }
+
+        /* Botão Mágico AI */
+        .ai-btn {
+            background: var(--ai-gradient);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(118, 75, 162, 0.5);
+            transition: transform 0.3s;
+            font-size: 20px;
+        }
+        .ai-btn:hover { transform: scale(1.1) rotate(10deg); }
 
         /* Aviso de busca (oculto por padrão) */
         .search-helper {
@@ -207,7 +233,7 @@
 
         @keyframes popUp { from { transform: translateY(100px); } to { transform: translateY(0); } }
 
-        /* --- MODAL DO CARRINHO --- */
+        /* --- MODAL GENERICO --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8); z-index: 2000;
@@ -281,6 +307,26 @@
         .cart-total { font-size: 24px; color: var(--primary); text-align: right; margin: 20px 0; border-top: 1px solid #333; padding-top: 15px; }
         
         .btn-whatsapp { width: 100%; background: var(--whatsapp); color: #fff; padding: 15px; border-radius: 10px; font-size: 18px; }
+
+        /* --- CHAT AI --- */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            background: #151515;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .message { padding: 10px; border-radius: 8px; max-width: 80%; font-size: 14px; line-height: 1.4; }
+        .message.bot { background: #2d2d2d; color: #ddd; align-self: flex-start; border-left: 3px solid var(--primary); }
+        .message.user { background: var(--primary); color: #000; align-self: flex-end; font-weight: 500; }
+        .input-area { display: flex; gap: 10px; }
+        .chat-btn { background: var(--ai-gradient); color: white; border: none; width: 45px; height: 45px; border-radius: 8px; cursor: pointer; }
+        .typing-indicator { font-size: 12px; color: #888; font-style: italic; margin-left: 10px; display: none; }
     </style>
 </head>
 <body>
@@ -289,21 +335,27 @@
     <header>
         <div class="container nav-flex">
             <div class="logo brand-font">DOGÃO PREÁ</div>
+            <div class="header-actions">
+                <button class="icon-btn" onclick="toggleSettings()"><i class="fas fa-cog"></i></button>
+            </div>
         </div>
     </header>
 
     <div class="container">
-        <!-- Barra de Busca -->
+        <!-- Barra de Busca + Botão Mágico -->
         <div class="search-container">
             <div class="search-box">
                 <i class="fas fa-search search-icon"></i>
-                <input type="text" class="search-input" id="search-input" placeholder="O que você procura hoje?" oninput="searchProducts(this.value)">
+                <input type="text" class="search-input" id="search-input" placeholder="O que procuras hoje?" oninput="searchProducts(this.value)">
             </div>
-            <!-- Aviso de Busca (Dinâmico) -->
-            <div id="search-helper" class="search-helper hidden">
-                <i class="fas fa-info-circle"></i>
-                <span>Marcas e sabores serão combinados no WhatsApp após o pedido.</span>
-            </div>
+            <button class="ai-btn" onclick="toggleChefBot()" title="Falar com Chef Dogão IA">
+                <i class="fas fa-sparkles"></i>
+            </button>
+        </div>
+        <!-- Aviso de Busca (Dinâmico) -->
+        <div id="search-helper" class="search-helper hidden">
+            <i class="fas fa-info-circle"></i>
+            <span>Marcas e sabores serão combinados no WhatsApp após o pedido.</span>
         </div>
     </div>
 
@@ -334,84 +386,68 @@
                 <h2 class="brand-font">Seu Pedido</h2>
                 <button class="close-modal" onclick="toggleCart()"><i class="fas fa-times"></i></button>
             </div>
-
-            <!-- Lista de Itens -->
-            <div id="cart-items" class="cart-items">
-                <p style="text-align: center; color: #666;">Seu carrinho está vazio.</p>
-            </div>
-
-            <!-- Total -->
+            <div id="cart-items" class="cart-items"><p style="text-align: center; color: #666;">Seu carrinho está vazio.</p></div>
             <div class="cart-total brand-font" id="modal-total">R$ 0,00</div>
-
-            <!-- Formulário de Checkout -->
             <div id="checkout-form" style="display: none;">
                 <h3 class="brand-font" style="margin-bottom: 15px; color: var(--primary);">Dados para Entrega</h3>
-                
-                <div class="form-group">
-                    <label class="form-label">Seu Nome*</label>
-                    <input type="text" id="customer-name" class="form-input" placeholder="Ex: João da Silva">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Tipo de Pedido*</label>
+                <div class="form-group"><label class="form-label">Seu Nome*</label><input type="text" id="customer-name" class="form-input" placeholder="Ex: João da Silva"></div>
+                <div class="form-group"><label class="form-label">Tipo de Pedido*</label>
                     <div class="radio-group">
-                        <div class="radio-option">
-                            <input type="radio" name="orderType" id="type-delivery" value="Entrega" onchange="toggleAddressField(true)">
-                            <label for="type-delivery"><i class="fas fa-motorcycle"></i> Entrega</label>
-                        </div>
-                        <div class="radio-option">
-                            <input type="radio" name="orderType" id="type-pickup" value="Retirada" onchange="toggleAddressField(false)">
-                            <label for="type-pickup"><i class="fas fa-box"></i> Retirada</label>
-                        </div>
-                        <div class="radio-option">
-                            <input type="radio" name="orderType" id="type-eatin" value="Mesa" onchange="toggleAddressField(false)">
-                            <label for="type-eatin"><i class="fas fa-utensils"></i> Mesa</label>
-                        </div>
+                        <div class="radio-option"><input type="radio" name="orderType" id="type-delivery" value="Entrega" onchange="toggleAddressField(true)"><label for="type-delivery"><i class="fas fa-motorcycle"></i> Entrega</label></div>
+                        <div class="radio-option"><input type="radio" name="orderType" id="type-pickup" value="Retirada" onchange="toggleAddressField(false)"><label for="type-pickup"><i class="fas fa-box"></i> Retirada</label></div>
+                        <div class="radio-option"><input type="radio" name="orderType" id="type-eatin" value="Mesa" onchange="toggleAddressField(false)"><label for="type-eatin"><i class="fas fa-utensils"></i> Mesa</label></div>
                     </div>
                 </div>
-
-                <!-- Campo de Endereço (Condicional) -->
                 <div id="address-section" class="form-group hidden">
-                    
-                    <!-- Novo aviso de Taxa de Entrega -->
-                    <div class="delivery-fee-notice">
-                        <i class="fas fa-info-circle"></i>
-                        <span>A taxa de entrega será calculada e informada no WhatsApp após o envio do pedido.</span>
-                    </div>
-
-                    <label class="form-label">Localização*</label>
-                    <button type="button" class="geo-btn" onclick="getLocation()">
-                        <i class="fas fa-map-marker-alt"></i> Usar Localização Atual (GPS)
-                    </button>
-                    <div id="geo-status" class="geo-status"></div>
-                    
-                    <label class="form-label" style="margin-top: 10px;">Ou digite o endereço/ponto de referência:</label>
-                    <textarea id="address-text" class="form-input" rows="2" placeholder="Rua, Número, Bairro..."></textarea>
-                    <input type="hidden" id="maps-link">
+                    <div class="delivery-fee-notice"><i class="fas fa-info-circle"></i><span>A taxa de entrega será calculada e informada no WhatsApp após o envio do pedido.</span></div>
+                    <label class="form-label">Localização*</label><button type="button" class="geo-btn" onclick="getLocation()"><i class="fas fa-map-marker-alt"></i> Usar Localização Atual (GPS)</button><div id="geo-status" class="geo-status"></div>
+                    <label class="form-label" style="margin-top: 10px;">Ou digite o endereço/ponto de referência:</label><textarea id="address-text" class="form-input" rows="2" placeholder="Rua, Número, Bairro..."></textarea><input type="hidden" id="maps-link">
                 </div>
-
-                <div class="form-group">
-                    <label class="form-label">Forma de Pagamento*</label>
-                    <select id="payment-method" class="form-select">
-                        <option value="PIX">PIX</option>
-                        <option value="Cartão de Crédito">Cartão de Crédito</option>
-                        <option value="Cartão de Débito">Cartão de Débito</option>
-                        <option value="Dinheiro">Dinheiro (Precisa de troco?)</option>
-                    </select>
+                <div class="form-group"><label class="form-label">Forma de Pagamento*</label>
+                    <select id="payment-method" class="form-select"><option value="PIX">PIX</option><option value="Cartão de Crédito">Cartão de Crédito</option><option value="Cartão de Débito">Cartão de Débito</option><option value="Dinheiro">Dinheiro (Precisa de troco?)</option></select>
                 </div>
+                <button class="btn btn-whatsapp" onclick="finalizeOrder()"><i class="fab fa-whatsapp"></i> ENVIAR PEDIDO</button>
+            </div>
+        </div>
+    </div>
 
-                <button class="btn btn-whatsapp" onclick="finalizeOrder()">
-                    <i class="fab fa-whatsapp"></i> ENVIAR PEDIDO
-                </button>
+    <!-- Modal Configurações -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal-content" style="height: auto; min-height: 40vh;">
+            <div class="modal-header">
+                <h2 class="brand-font">Configurações</h2>
+                <button class="close-modal" onclick="toggleSettings()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Gemini API Key (Google AI)</label>
+                <input type="password" id="gemini-key" class="form-input" placeholder="Cole a sua chave API aqui">
+                <small style="color: #666; display: block; margin-top: 5px;">Necessária para o Chef Virtual funcionar.</small>
+            </div>
+            <button class="btn btn-primary" onclick="saveSettings()" style="width: 100%;">SALVAR</button>
+        </div>
+    </div>
+
+    <!-- Modal Chef Bot IA -->
+    <div class="modal-overlay" id="chef-bot-modal">
+        <div class="modal-content" style="height: 80vh;">
+            <div class="modal-header">
+                <h2 class="brand-font" style="color: #8e9eab; background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Chef Dogão Virtual ✨</h2>
+                <button class="close-modal" onclick="toggleChefBot()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+                <div class="message bot">Olá! Sou o Chef Dogão 🤖. Não sabes o que pedir? Diz-me o tamanho da tua fome ou o que gostas de comer! 🍔</div>
+            </div>
+            <div class="typing-indicator" id="typing-indicator">Chef Dogão está a pensar...</div>
+            <div class="input-area">
+                <input type="text" id="chat-input" class="form-input" placeholder="Ex: Tenho 20 reais e muita fome..." onkeypress="handleChatKey(event)">
+                <button class="chat-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
             </div>
         </div>
     </div>
 
     <script>
-        // --- DADOS DO CARDÁPIO ATUALIZADOS ---
-        // Adicionei a propriedade 'keywords' para facilitar a busca
+        // --- DADOS DO CARDÁPIO ---
         const menuData = [
-            // Sanduíches Econômicos & Tradicionais
             { id: 1, name: "Queijo e Ovos", price: 10.00, category: "sanduiches", desc: "Pão, queijo e ovos." },
             { id: 2, name: "Hambúrguer", price: 10.00, category: "sanduiches", desc: "Pão, carne de hambúrguer e salada." },
             { id: 3, name: "Misto Quente", price: 10.00, category: "sanduiches", desc: "Pão, queijo e presunto." },
@@ -420,26 +456,18 @@
             { id: 6, name: "Calabresa Simples", price: 12.00, category: "sanduiches", desc: "Pão, calabresa, queijo e salada." },
             { id: 7, name: "Americano", price: 12.00, category: "sanduiches", desc: "Pão, queijo, presunto, ovos e salada." },
             { id: 8, name: "X-Salada", price: 12.00, category: "sanduiches", desc: "Pão, carne de hambúrguer, queijo e salada." },
-            
-            // Sanduíches Especiais
             { id: 9, name: "Baurú", price: 14.00, category: "sanduiches", desc: "Pão, carne, queijo, presunto e salada." },
             { id: 10, name: "X-Egg", price: 14.00, category: "sanduiches", desc: "Pão, carne, queijo, ovos e salada." },
             { id: 11, name: "X-Calabresa", price: 14.00, category: "sanduiches", desc: "Pão, carne, queijo, calabresa e salada." },
             { id: 12, name: "X-Frango", price: 14.00, category: "sanduiches", desc: "Pão, carne, queijo, frango e salada." },
             { id: 13, name: "X-Bacon", price: 15.00, category: "sanduiches", desc: "Pão, carne, queijo, bacon e salada." },
             { id: 14, name: "X-Frango Bacon", price: 15.00, category: "sanduiches", desc: "Pão, carne, queijo, frango, bacon e salada." },
-            
-            // Gigantes / Pão Árabe
             { id: 15, name: "X-Tudo", price: 18.00, category: "especiais", desc: "Pão, carne, queijo, frango, presunto, ovos, bacon e salada." },
             { id: 16, name: "Sandubob", price: 16.00, category: "especiais", desc: "Pão árabe, 2 carnes, queijo, ovos e salada." },
             { id: 17, name: "Dogão (Pão Árabe)", price: 18.00, category: "especiais", desc: "Pão árabe, carne caseira, queijo, frango, bacon, calabresa, salada." },
             { id: 18, name: "Lanchão (Pão Árabe)", price: 18.00, category: "especiais", desc: "Pão árabe, carne, queijo, frango, ovos, bacon, salada." },
-
-            // Hot Dogs
             { id: 19, name: "Hot-Dog Simples", price: 12.00, category: "hotdogs", desc: "Pão, molho carne, salsicha, salada, batata, milho." },
             { id: 20, name: "Hot-Scooby", price: 14.00, category: "hotdogs", desc: "Pão, molho carne, 2 salsichas, salada, batata, milho, queijo." },
-
-            // Pastéis
             { id: 21, name: "Pastel Misto (P)", price: 10.00, category: "pasteis", desc: "Tamanho Pequeno." },
             { id: 22, name: "Pastel Misto (G)", price: 12.00, category: "pasteis", desc: "Tamanho Grande." },
             { id: 23, name: "Pastel Queijo (P)", price: 10.00, category: "pasteis", desc: "Tamanho Pequeno." },
@@ -448,46 +476,14 @@
             { id: 26, name: "Pastel Carne (G)", price: 14.00, category: "pasteis", desc: "Tamanho Grande." },
             { id: 27, name: "Pastel Frango/Queijo (P)", price: 12.00, category: "pasteis", desc: "Tamanho Pequeno." },
             { id: 28, name: "Pastel Frango/Queijo (G)", price: 14.00, category: "pasteis", desc: "Tamanho Grande." },
-
-            // Batatas & Bebidas
             { id: 29, name: "Batata Frita (P)", price: 15.00, category: "bebidas", desc: "Porção Pequena." },
             { id: 30, name: "Batata Frita (G)", price: 20.00, category: "bebidas", desc: "Porção Grande." },
             { id: 31, name: "Batata Recheada", price: 35.00, category: "bebidas", desc: "Batata frita, bacon e calabresa." },
             { id: 32, name: "Sucos Naturais", price: 0.00, category: "bebidas", desc: "Valores a consultar." },
-            
-            // Refrigerantes Separados (Com Keywords para busca)
-            { 
-                id: 33, 
-                name: "Refrigerante Lata", 
-                price: 0.00, 
-                category: "bebidas", 
-                desc: "350ml. Sabor a combinar.",
-                keywords: ["coca", "cola", "fanta", "guarana", "guaraná", "pepsi", "sprite", "sukita", "kuat", "soda", "antarctica"] 
-            },
-            { 
-                id: 34, 
-                name: "Refrigerante 1 Litro", 
-                price: 0.00, 
-                category: "bebidas", 
-                desc: "Sabor a combinar.",
-                keywords: ["coca", "cola", "fanta", "guarana", "guaraná", "pepsi", "sprite", "sukita", "kuat", "soda", "antarctica"] 
-            },
-            { 
-                id: 35, 
-                name: "Refrigerante 1.5 Litros", 
-                price: 0.00, 
-                category: "bebidas", 
-                desc: "Sabor a combinar.",
-                keywords: ["coca", "cola", "fanta", "guarana", "guaraná", "pepsi", "sprite", "sukita", "kuat", "soda", "antarctica"] 
-            },
-            { 
-                id: 36, 
-                name: "Refrigerante 2 Litros", 
-                price: 0.00, 
-                category: "bebidas", 
-                desc: "Sabor a combinar.",
-                keywords: ["coca", "cola", "fanta", "guarana", "guaraná", "pepsi", "sprite", "sukita", "kuat", "soda", "antarctica"] 
-            }
+            { id: 33, name: "Refrigerante Lata", price: 0.00, category: "bebidas", desc: "350ml. Sabor a combinar.", keywords: ["coca", "cola", "fanta", "guarana", "guaraná", "pepsi", "sprite", "sukita", "kuat", "soda", "antarctica"] },
+            { id: 34, name: "Refrigerante 1 Litro", price: 0.00, category: "bebidas", desc: "Sabor a combinar.", keywords: ["coca", "cola", "fanta", "guarana", "guaraná", "pepsi", "sprite", "sukita", "kuat", "soda", "antarctica"] },
+            { id: 35, name: "Refrigerante 1.5 Litros", price: 0.00, category: "bebidas", desc: "Sabor a combinar.", keywords: ["coca", "cola", "fanta", "guarana", "guaraná", "pepsi", "sprite", "sukita", "kuat", "soda", "antarctica"] },
+            { id: 36, name: "Refrigerante 2 Litros", price: 0.00, category: "bebidas", desc: "Sabor a combinar.", keywords: ["coca", "cola", "fanta", "guarana", "guaraná", "pepsi", "sprite", "sukita", "kuat", "soda", "antarctica"] }
         ];
 
         const categories = [
@@ -498,184 +494,110 @@
             { id: 'bebidas', label: 'Acompanhamentos' }
         ];
 
-        // --- ESTADO DO APP ---
         let cart = [];
+        const apiKey = ""; // Exec env will provide if configured, else manual input
 
-        // --- INICIALIZAÇÃO ---
         window.onload = () => {
             renderCategories();
             renderMenu();
+            // Load saved key
+            const savedKey = localStorage.getItem('dogao_gemini_key');
+            if(savedKey) document.getElementById('gemini-key').value = savedKey;
         };
 
-        // Renderizar Categorias
         function renderCategories() {
             const list = document.getElementById('category-list');
             list.innerHTML = `<li><button class="cat-btn active" onclick="filterMenu('all', this)">Todos</button></li>` + 
                 categories.map(c => `<li><button class="cat-btn" onclick="filterMenu('${c.id}', this)">${c.label}</button></li>`).join('');
         }
 
-        // Helper: Retorna HTML do botão (Adicionar OU Controles Qty)
         function getButtonHtml(id) {
             const itemInCart = cart.find(i => i.id === id);
-            
             if (itemInCart) {
-                return `
-                    <div class="qty-selector">
-                        <button onclick="updateQty(${id}, -1)"><i class="fas fa-minus"></i></button>
-                        <span>${itemInCart.qty}</span>
-                        <button onclick="updateQty(${id}, 1)"><i class="fas fa-plus"></i></button>
-                    </div>
-                `;
+                return `<div class="qty-selector"><button onclick="updateQty(${id}, -1)"><i class="fas fa-minus"></i></button><span>${itemInCart.qty}</span><button onclick="updateQty(${id}, 1)"><i class="fas fa-plus"></i></button></div>`;
             } else {
-                return `
-                    <button class="add-btn" onclick="addToCart(${id})">
-                        ADICIONAR <i class="fas fa-plus"></i>
-                    </button>
-                `;
+                return `<button class="add-btn" onclick="addToCart(${id})">ADICIONAR <i class="fas fa-plus"></i></button>`;
             }
         }
 
-        // Função de Busca Global
         function searchProducts(query) {
             const term = query.toLowerCase().trim();
             const catButtons = document.querySelectorAll('.cat-btn');
             const helper = document.getElementById('search-helper');
-
-            // Lógica de detecção de marcas de refrigerante
             const sodaBrands = ["coca", "cola", "fanta", "guarana", "guaraná", "pepsi", "sprite", "sukita", "kuat", "soda", "antarctica", "refri"];
             const isSodaSearch = sodaBrands.some(brand => term.includes(brand));
 
-            // Exibir/Ocultar aviso de sabor
-            if(isSodaSearch) {
-                helper.classList.remove('hidden');
-            } else {
-                helper.classList.add('hidden');
-            }
+            if(isSodaSearch) helper.classList.remove('hidden');
+            else helper.classList.add('hidden');
             
             if (term.length > 0) {
                 catButtons.forEach(btn => btn.classList.remove('active'));
-                // Filtra globalmente (Nome, Descrição OU Keywords ocultas)
                 const filtered = menuData.filter(item => {
                     const nameMatch = item.name.toLowerCase().includes(term);
                     const descMatch = item.desc.toLowerCase().includes(term);
                     const keywordMatch = item.keywords ? item.keywords.some(k => k.includes(term)) : false;
-                    
                     return nameMatch || descMatch || keywordMatch;
                 });
                 renderGrid(filtered, term);
             } else {
-                // Se limpar a busca, volta para 'Todos' e esconde aviso
                 helper.classList.add('hidden');
                 filterMenu('all', document.querySelector('.cat-btn'));
             }
         }
 
-        // Renderizar Grade de Produtos (Genérico)
         function renderGrid(items, searchTerm = '') {
             const container = document.getElementById('menu-container');
-            
             if (items.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: #aaa;">
-                        <i class="fas fa-search" style="font-size: 40px; margin-bottom: 10px;"></i>
-                        <p>Nenhum produto encontrado para "${searchTerm}"</p>
-                    </div>
-                `;
+                container.innerHTML = `<div style="text-align: center; padding: 40px; color: #aaa;"><i class="fas fa-search" style="font-size: 40px; margin-bottom: 10px;"></i><p>Nenhum produto encontrado para "${searchTerm}"</p></div>`;
                 return;
             }
-
-            container.innerHTML = `
-                <div class="menu-grid">
-                    ${items.map(item => {
-                        const priceDisplay = item.price > 0 ? `R$ ${item.price.toFixed(2).replace('.',',')}` : "Consultar";
-                        return `
-                        <div class="menu-item">
-                            <div class="item-content">
-                                <div class="item-header">
-                                    <span class="item-title">${item.name}</span>
-                                    <span class="item-price">${priceDisplay}</span>
-                                </div>
-                                <p class="item-desc">${item.desc}</p>
-                                <div class="btn-container" id="btn-container-${item.id}">
-                                    ${getButtonHtml(item.id)}
-                                </div>
-                            </div>
-                        </div>
-                    `}).join('')}
-                </div>
-            `;
+            container.innerHTML = `<div class="menu-grid">${items.map(item => {
+                const priceDisplay = item.price > 0 ? `R$ ${item.price.toFixed(2).replace('.',',')}` : "Consultar";
+                return `<div class="menu-item"><div class="item-content"><div class="item-header"><span class="item-title">${item.name}</span><span class="item-price">${priceDisplay}</span></div><p class="item-desc">${item.desc}</p><div class="btn-container" id="btn-container-${item.id}">${getButtonHtml(item.id)}</div></div></div>`
+            }).join('')}</div>`;
         }
 
-        // Renderizar Menu (por Categoria) - Usa renderGrid agora
         function renderMenu(filter = 'all') {
-            // Limpa campo de busca ao trocar de categoria
             document.getElementById('search-input').value = '';
             document.getElementById('search-helper').classList.add('hidden');
-            
             const itemsToShow = filter === 'all' ? menuData : menuData.filter(i => i.category === filter);
             renderGrid(itemsToShow);
         }
 
         function filterMenu(catId, btnElement) {
             document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-            // Se o btnElement for null (chamada manual), tenta pegar o botão "Todos" ou o correspondente
-            if (btnElement) {
-                btnElement.classList.add('active');
-            }
+            if (btnElement) btnElement.classList.add('active');
             renderMenu(catId);
         }
 
-        // --- LÓGICA DO CARRINHO ---
-
-        // Função: Adicionar item inicial
         function addToCart(id) {
             const item = menuData.find(i => i.id === id);
             const existing = cart.find(i => i.id === id);
-
-            if (existing) {
-                existing.qty++;
-            } else {
-                cart.push({ ...item, qty: 1 });
-            }
-            
-            // Atualiza UI
+            if (existing) existing.qty++;
+            else cart.push({ ...item, qty: 1 });
             updateGridButton(id);
             updateCartUI();
-            
             if (navigator.vibrate) navigator.vibrate(50);
         }
 
-        // Função: Atualizar Quantidade (+ ou -)
         function updateQty(id, change) {
             const itemIndex = cart.findIndex(i => i.id === id);
-            
             if (itemIndex > -1) {
                 cart[itemIndex].qty += change;
-                
-                // Remove se for zero
-                if (cart[itemIndex].qty <= 0) {
-                    cart.splice(itemIndex, 1);
-                }
+                if (cart[itemIndex].qty <= 0) cart.splice(itemIndex, 1);
             }
-            
-            // Atualiza UI
             updateGridButton(id);
             updateCartUI();
         }
 
-        // Helper: Atualiza apenas o botão do grid específico (sem re-renderizar tudo)
         function updateGridButton(id) {
             const container = document.getElementById(`btn-container-${id}`);
-            if (container) {
-                container.innerHTML = getButtonHtml(id);
-            }
+            if (container) container.innerHTML = getButtonHtml(id);
         }
 
         function updateCartUI() {
             const totalQty = cart.reduce((acc, item) => acc + item.qty, 0);
             const totalPrice = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
-
-            // Atualiza botão flutuante
             const floatBtn = document.getElementById('floating-cart');
             document.getElementById('cart-count').innerText = totalQty;
             document.getElementById('cart-total-float').innerText = `R$ ${totalPrice.toFixed(2).replace('.',',')}`;
@@ -687,144 +609,158 @@
                 floatBtn.classList.add('hidden');
                 document.getElementById('checkout-form').style.display = 'none';
             }
-
-            // Atualiza Lista no Modal
             const list = document.getElementById('cart-items');
             if (cart.length === 0) {
                 list.innerHTML = '<p style="text-align: center; color: #666; margin: 20px;">Carrinho vazio...</p>';
             } else {
                 list.innerHTML = cart.map(item => {
                     const itemTotal = item.price > 0 ? `R$ ${(item.price * item.qty).toFixed(2).replace('.',',')}` : "A Consultar";
-                    return `
-                    <div class="cart-item-row">
-                        <div class="cart-item-info">
-                            <h4>${item.name}</h4>
-                            <span>${itemTotal}</span>
-                        </div>
-                        <div class="qty-controls">
-                            <button class="qty-btn" onclick="updateQty(${item.id}, -1)">-</button>
-                            <span style="color: #fff; font-weight: bold;">${item.qty}</span>
-                            <button class="qty-btn" onclick="updateQty(${item.id}, 1)">+</button>
-                        </div>
-                    </div>
-                `}).join('');
+                    return `<div class="cart-item-row"><div class="cart-item-info"><h4>${item.name}</h4><span>${itemTotal}</span></div><div class="qty-controls"><button class="qty-btn" onclick="updateQty(${item.id}, -1)">-</button><span style="color: #fff; font-weight: bold;">${item.qty}</span><button class="qty-btn" onclick="updateQty(${item.id}, 1)">+</button></div></div>`
+                }).join('');
             }
-            
             document.getElementById('modal-total').innerText = `Total Estimado: R$ ${totalPrice.toFixed(2).replace('.',',')}`;
         }
 
         function toggleCart() {
-            const modal = document.getElementById('cart-modal');
-            modal.classList.toggle('open');
+            document.getElementById('cart-modal').classList.toggle('open');
+        }
+        
+        function toggleSettings() {
+            document.getElementById('settings-modal').classList.toggle('open');
         }
 
-        // --- LÓGICA DE FORMULÁRIO & GEO ---
+        function toggleChefBot() {
+            document.getElementById('chef-bot-modal').classList.toggle('open');
+        }
+
         function toggleAddressField(show) {
             const el = document.getElementById('address-section');
             if (show) el.classList.remove('hidden');
             else el.classList.add('hidden');
         }
 
+        function saveSettings() {
+            const key = document.getElementById('gemini-key').value;
+            localStorage.setItem('dogao_gemini_key', key);
+            toggleSettings();
+            alert('Chave API guardada!');
+        }
+
         function getLocation() {
             const status = document.getElementById('geo-status');
             const mapsInput = document.getElementById('maps-link');
-            
-            if (!navigator.geolocation) {
-                status.innerText = "Geolocalização não suportada.";
-                return;
-            }
-
+            if (!navigator.geolocation) { status.innerText = "Geolocalização não suportada."; return; }
             status.innerText = "Solicitando permissão...";
-
-            const options = {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 0
-            };
-
+            const options = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
                     const link = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
-                    
                     mapsInput.value = link;
                     status.innerHTML = `<span class="geo-success"><i class="fas fa-check-circle"></i> Localização gravada!</span>`;
                 },
                 (error) => {
                     let msg = "Erro ao obter localização.";
                     switch(error.code) {
-                        case error.PERMISSION_DENIED:
-                            msg = "Permissão negada. Ative nas configurações.";
-                            break;
-                        case error.POSITION_UNAVAILABLE:
-                            msg = "Sinal de GPS indisponível.";
-                            break;
-                        case error.TIMEOUT:
-                            msg = "Tempo esgotado. Tente novamente.";
-                            break;
+                        case error.PERMISSION_DENIED: msg = "Permissão negada. Ative nas configurações."; break;
+                        case error.POSITION_UNAVAILABLE: msg = "Sinal de GPS indisponível."; break;
+                        case error.TIMEOUT: msg = "Tempo esgotado. Tente novamente."; break;
                     }
                     status.innerText = msg;
-                    // Fallback manual input focus
                     document.getElementById('address-text').focus();
-                },
-                options
+                }, options
             );
         }
 
         function finalizeOrder() {
-            // Validação Básica
             const name = document.getElementById('customer-name').value;
             const typeRadio = document.querySelector('input[name="orderType"]:checked');
             const payment = document.getElementById('payment-method').value;
-            
             if (!name) return alert("Por favor, digite seu nome.");
             if (!typeRadio) return alert("Escolha o tipo de pedido.");
-            
             const type = typeRadio.value;
             let addressMsg = "";
-
             if (type === 'Entrega') {
                 const mapsLink = document.getElementById('maps-link').value;
                 const addressText = document.getElementById('address-text').value;
-                
                 if (!mapsLink && !addressText) return alert("Para entrega, precisamos da localização GPS ou do endereço escrito.");
-                
                 if (mapsLink) addressMsg += `\n📍 *GPS:* ${mapsLink}`;
                 if (addressText) addressMsg += `\n🏠 *Endereço:* ${addressText}`;
             }
-
-            // Montar Mensagem WhatsApp
             let msg = `*NOVO PEDIDO - DOGÃO PREÁ*\n----------------------------\n`;
             msg += `👤 *Cliente:* ${name}\n`;
             msg += `📦 *Tipo:* ${type}\n`;
             msg += `💰 *Pagamento:* ${payment}\n\n`;
-            
             msg += `*ITENS:*\n`;
             let hasConsultItem = false;
-
             cart.forEach(item => {
                 const priceTxt = item.price > 0 ? `(R$ ${(item.price * item.qty).toFixed(2)})` : "(Consultar)";
                 msg += `${item.qty}x ${item.name} ${priceTxt}\n`;
                 if(item.price === 0) hasConsultItem = true;
             });
-
             const total = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
             msg += `\n*TOTAL ESTIMADO: R$ ${total.toFixed(2).replace('.',',')}*`;
-            
-            if(hasConsultItem) {
-                msg += `\n⚠️ _Contém itens a consultar valor._`;
-            }
-            
+            if(hasConsultItem) msg += `\n⚠️ _Contém itens a consultar valor._`;
             if (addressMsg) {
                 msg += `\n\n*LOCAL DE ENTREGA:*${addressMsg}`;
                 msg += `\n⚠️ _Taxa de entrega a calcular._`;
             }
-
-            // Enviar
             const phone = "5588996768158";
             const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
             window.open(url, '_blank');
+        }
+
+        /* --- LÓGICA GEMINI API --- */
+        function handleChatKey(e) { if(e.key === 'Enter') sendMessage(); }
+
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const msg = input.value.trim();
+            const messagesContainer = document.getElementById('chat-messages');
+            const apiKey = localStorage.getItem('dogao_gemini_key') || "";
+
+            if (!msg) return;
+            if (!apiKey) {
+                alert("Por favor, configure a Chave API do Gemini nas configurações (engrenagem no topo).");
+                toggleSettings();
+                return;
+            }
+
+            // Add User Message
+            messagesContainer.innerHTML += `<div class="message user">${msg}</div>`;
+            input.value = '';
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            // Show Typing
+            document.getElementById('typing-indicator').style.display = 'block';
+
+            try {
+                const menuContext = JSON.stringify(menuData.map(i => ({name: i.name, desc: i.desc, price: i.price})));
+                const systemPrompt = `Tu és o Chef Dogão, um assistente virtual muito engraçado, informal e com sotaque brasileiro (nordestino leve) da lanchonete 'Dogão Preá'. O teu objetivo é sugerir itens do menu com base na fome ou gosto do cliente. O menu é: ${menuContext}. Sê breve, usa emojis e sugere sempre algo específico. Se o cliente falar de valores, respeita os preços.`;
+
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: `Cliente disse: "${msg}". O que respondes?` }] }],
+                        systemInstruction: { parts: [{ text: systemPrompt }] }
+                    })
+                });
+
+                const data = await response.json();
+                const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Desculpa, a cozinha está uma loucura! Não entendi.";
+                
+                // Add AI Message
+                messagesContainer.innerHTML += `<div class="message bot">${aiText}</div>`;
+
+            } catch (error) {
+                console.error(error);
+                messagesContainer.innerHTML += `<div class="message bot" style="color: #ff4444;">Ocorreu um erro ao falar com o Chef. Verifica a tua chave API.</div>`;
+            } finally {
+                document.getElementById('typing-indicator').style.display = 'none';
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
         }
     </script>
 </body>
