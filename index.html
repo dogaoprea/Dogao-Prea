@@ -23,6 +23,8 @@
             --whatsapp: #25D366;
             --danger: #ff4444;
             --ai-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --info-bg: rgba(59, 130, 246, 0.15);
+            --info-text: #60a5fa;
             
             /* Tema Escuro (Padrão) */
             --bg-body: #0f0f0f;
@@ -49,6 +51,7 @@
             --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
             --input-bg: #ffffff;
             --glass-border: 1px solid rgba(0, 0, 0, 0.05);
+            --info-text: #2563eb;
         }
 
         @media (prefers-color-scheme: light) {
@@ -63,6 +66,7 @@
                 --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
                 --input-bg: #ffffff;
                 --glass-border: 1px solid rgba(0, 0, 0, 0.05);
+                --info-text: #2563eb;
             }
         }
 
@@ -165,6 +169,22 @@
             font-family: inherit;
         }
         .search-icon { color: var(--text-muted); }
+
+        /* Aviso de busca (Corrigido e Reintroduzido) */
+        .search-helper {
+            margin-top: 10px;
+            background-color: var(--info-bg);
+            color: var(--info-text);
+            padding: 12px 15px;
+            border-radius: 12px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid var(--info-text);
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Botão Mágico AI */
         .ai-btn {
@@ -289,6 +309,7 @@
         }
         .add-btn:hover { background: var(--primary); color: #000; }
 
+        /* Botões de Quantidade no Grid */
         .qty-selector {
             display: flex; align-items: center; justify-content: space-between;
             background-color: var(--bg-element); border-radius: 12px;
@@ -351,11 +372,29 @@
         .close-modal { background: var(--bg-element); border: none; color: var(--text-main); width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
         .close-modal:hover { background: var(--danger); color: white; }
 
-        /* --- CHECKOUT FORM --- */
+        /* --- CHECKOUT FORM & CART ITEMS --- */
         .cart-items { margin-bottom: 20px; }
         .cart-item-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: var(--bg-element); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); }
         .cart-item-info h4 { font-size: 16px; color: var(--text-main); margin-bottom: 4px; }
         .cart-item-info span { font-size: 14px; color: var(--primary); font-weight: 700; }
+        
+        /* --- CORREÇÃO: BOTÕES DE QUANTIDADE DO CARRINHO MAIORES --- */
+        .qty-controls { display: flex; align-items: center; gap: 15px; }
+        .qty-btn { 
+            background: var(--bg-body); 
+            color: var(--text-main); 
+            width: 36px; /* Aumentado */
+            height: 36px; /* Aumentado */
+            border-radius: 50%; 
+            border: 1px solid var(--border-color); 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            font-size: 16px; /* Aumentado */
+            transition: 0.2s;
+        }
+        .qty-btn:active { transform: scale(0.9); background-color: var(--bg-element); }
         
         .form-group { margin-bottom: 20px; }
         .form-label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: var(--text-muted); }
@@ -524,6 +563,11 @@
             <button class="ai-btn" onclick="toggleChefBot()" title="Falar com Chef Dogão">
                 <i class="fas fa-comment-dots"></i>
             </button>
+        </div>
+        <!-- Aviso de Busca (Dinâmico - REINTRODUZIDO) -->
+        <div id="search-helper" class="search-helper hidden">
+            <i class="fas fa-info-circle"></i>
+            <span>Marcas e sabores serão combinados no WhatsApp após o pedido.</span>
         </div>
     </div>
 
@@ -799,10 +843,21 @@
             renderMenu(catId);
         }
 
-        /* --- BUSCA --- */
+        /* --- BUSCA (ATUALIZADA) --- */
         function searchProducts(query) {
             const term = query.toLowerCase().trim();
             const catButtons = document.querySelectorAll('.cat-btn');
+            const helper = document.getElementById('search-helper');
+            
+            // Lógica para mostrar o aviso de refrigerante
+            const sodaBrands = ["coca", "cola", "fanta", "guarana", "guaraná", "pepsi", "sprite", "sukita", "kuat", "soda", "antarctica", "refri"];
+            const isSodaSearch = sodaBrands.some(brand => term.includes(brand));
+
+            if(isSodaSearch) {
+                helper.classList.remove('hidden');
+            } else {
+                helper.classList.add('hidden');
+            }
             
             if (term.length > 0) {
                 catButtons.forEach(btn => btn.classList.remove('active'));
@@ -820,6 +875,7 @@
                     container.innerHTML = `<div class="menu-grid" style="margin-top: 20px;">${filtered.map(item => createItemCard(item)).join('')}</div>`;
                 }
             } else {
+                helper.classList.add('hidden');
                 filterMenu('all', document.querySelector('.cat-btn'));
             }
         }
