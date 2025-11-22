@@ -102,11 +102,33 @@
         .item-price { color: var(--primary); font-weight: 700; font-size: 18px; }
         .item-desc { font-size: 13px; color: var(--text-gray); margin-bottom: 15px; flex-grow: 1; }
         
-        .add-btn {
-            width: 100%; background: #2d2d2d; color: #fff; padding: 12px;
-            border-radius: 8px; font-weight: 600; border: 1px solid #444;
+        /* Botões de Ação (Adicionar e Qty) */
+        .btn-container {
+            margin-top: auto;
+            height: 46px; /* Altura fixa para evitar pulos de layout */
         }
-        .add-btn:hover { background: var(--whatsapp); border-color: var(--whatsapp); }
+
+        .add-btn {
+            width: 100%; height: 100%; background: #2d2d2d; color: #fff; 
+            border-radius: 8px; font-weight: 600; border: 1px solid #444;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            cursor: pointer; transition: 0.2s;
+        }
+        .add-btn:hover { background: var(--primary); color: #000; border-color: var(--primary); }
+
+        .qty-selector {
+            display: flex; align-items: center; justify-content: space-between;
+            background-color: #252525; border-radius: 8px; border: 1px solid var(--primary);
+            width: 100%; height: 100%; padding: 0 5px;
+        }
+        .qty-selector button {
+            width: 40px; height: 100%; background: transparent; color: #fff;
+            border: none; font-size: 16px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .qty-selector button:active { transform: scale(0.9); }
+        .qty-selector button:hover { color: var(--primary); }
+        .qty-selector span { color: var(--primary); font-weight: 800; font-size: 18px; }
 
         /* --- CARRINHO FLUTUANTE (FAB) --- */
         .floating-cart {
@@ -320,7 +342,7 @@
     </div>
 
     <script>
-        // --- DADOS DO CARDÁPIO ATUALIZADOS (Baseado no PDF) ---
+        // --- DADOS DO CARDÁPIO ATUALIZADOS ---
         const menuData = [
             // Sanduíches Econômicos & Tradicionais
             { id: 1, name: "Queijo e Ovos", price: 10.00, category: "sanduiches", desc: "Pão, queijo e ovos." },
@@ -350,7 +372,7 @@
             { id: 19, name: "Hot-Dog Simples", price: 12.00, category: "hotdogs", desc: "Pão, molho carne, salsicha, salada, batata, milho." },
             { id: 20, name: "Hot-Scooby", price: 14.00, category: "hotdogs", desc: "Pão, molho carne, 2 salsichas, salada, batata, milho, queijo." },
 
-            // Pastéis (Divididos por tamanho)
+            // Pastéis
             { id: 21, name: "Pastel Misto (P)", price: 10.00, category: "pasteis", desc: "Tamanho Pequeno." },
             { id: 22, name: "Pastel Misto (G)", price: 12.00, category: "pasteis", desc: "Tamanho Grande." },
             { id: 23, name: "Pastel Queijo (P)", price: 10.00, category: "pasteis", desc: "Tamanho Pequeno." },
@@ -360,11 +382,10 @@
             { id: 27, name: "Pastel Frango/Queijo (P)", price: 12.00, category: "pasteis", desc: "Tamanho Pequeno." },
             { id: 28, name: "Pastel Frango/Queijo (G)", price: 14.00, category: "pasteis", desc: "Tamanho Grande." },
 
-            // Batatas & Bebidas (Extras)
+            // Batatas & Bebidas
             { id: 29, name: "Batata Frita (P)", price: 15.00, category: "bebidas", desc: "Porção Pequena." },
             { id: 30, name: "Batata Frita (G)", price: 20.00, category: "bebidas", desc: "Porção Grande." },
             { id: 31, name: "Batata Recheada", price: 35.00, category: "bebidas", desc: "Batata frita, bacon e calabresa." },
-            // Bebidas com valor a consultar (Preço 0.00 para lógica)
             { id: 32, name: "Sucos Naturais", price: 0.00, category: "bebidas", desc: "Valores a consultar." },
             { id: 33, name: "Refrigerantes", price: 0.00, category: "bebidas", desc: "Lata, 1L, 1.5L e 2L. Valores a consultar." }
         ];
@@ -393,6 +414,27 @@
                 categories.map(c => `<li><button class="cat-btn" onclick="filterMenu('${c.id}', this)">${c.label}</button></li>`).join('');
         }
 
+        // Helper: Retorna HTML do botão (Adicionar OU Controles Qty)
+        function getButtonHtml(id) {
+            const itemInCart = cart.find(i => i.id === id);
+            
+            if (itemInCart) {
+                return `
+                    <div class="qty-selector">
+                        <button onclick="updateQty(${id}, -1)"><i class="fas fa-minus"></i></button>
+                        <span>${itemInCart.qty}</span>
+                        <button onclick="updateQty(${id}, 1)"><i class="fas fa-plus"></i></button>
+                    </div>
+                `;
+            } else {
+                return `
+                    <button class="add-btn" onclick="addToCart(${id})">
+                        ADICIONAR <i class="fas fa-plus"></i>
+                    </button>
+                `;
+            }
+        }
+
         // Renderizar Menu
         function renderMenu(filter = 'all') {
             const container = document.getElementById('menu-container');
@@ -401,7 +443,6 @@
             container.innerHTML = `
                 <div class="menu-grid">
                     ${itemsToShow.map(item => {
-                        // Lógica para exibir "Consultar" se preço for 0
                         const priceDisplay = item.price > 0 ? `R$ ${item.price.toFixed(2).replace('.',',')}` : "Consultar";
                         return `
                         <div class="menu-item">
@@ -411,9 +452,9 @@
                                     <span class="item-price">${priceDisplay}</span>
                                 </div>
                                 <p class="item-desc">${item.desc}</p>
-                                <button class="btn add-btn" onclick="addToCart(${item.id})">
-                                    ADICIONAR <i class="fas fa-plus"></i>
-                                </button>
+                                <div class="btn-container" id="btn-container-${item.id}">
+                                    ${getButtonHtml(item.id)}
+                                </div>
                             </div>
                         </div>
                     `}).join('')}
@@ -428,6 +469,8 @@
         }
 
         // --- LÓGICA DO CARRINHO ---
+
+        // Função: Adicionar item inicial
         function addToCart(id) {
             const item = menuData.find(i => i.id === id);
             const existing = cart.find(i => i.id === id);
@@ -437,21 +480,38 @@
             } else {
                 cart.push({ ...item, qty: 1 });
             }
+            
+            // Atualiza UI
+            updateGridButton(id);
             updateCartUI();
             
-            // Feedback visual simples (vibração se mobile)
             if (navigator.vibrate) navigator.vibrate(50);
         }
 
+        // Função: Atualizar Quantidade (+ ou -)
         function updateQty(id, change) {
-            const item = cart.find(i => i.id === id);
-            if (item) {
-                item.qty += change;
-                if (item.qty <= 0) {
-                    cart = cart.filter(i => i.id !== id);
+            const itemIndex = cart.findIndex(i => i.id === id);
+            
+            if (itemIndex > -1) {
+                cart[itemIndex].qty += change;
+                
+                // Remove se for zero
+                if (cart[itemIndex].qty <= 0) {
+                    cart.splice(itemIndex, 1);
                 }
             }
+            
+            // Atualiza UI
+            updateGridButton(id);
             updateCartUI();
+        }
+
+        // Helper: Atualiza apenas o botão do grid específico (sem re-renderizar tudo)
+        function updateGridButton(id) {
+            const container = document.getElementById(`btn-container-${id}`);
+            if (container) {
+                container.innerHTML = getButtonHtml(id);
+            }
         }
 
         function updateCartUI() {
@@ -513,24 +573,45 @@
             const mapsInput = document.getElementById('maps-link');
             
             if (!navigator.geolocation) {
-                status.innerText = "Geolocalização não suportada pelo navegador.";
+                status.innerText = "Geolocalização não suportada.";
                 return;
             }
 
-            status.innerText = "Localizando...";
+            status.innerText = "Solicitando permissão...";
+
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            };
 
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
-                    const link = `https://maps.google.com/?q=${lat},${lng}`;
+                    const link = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
                     
                     mapsInput.value = link;
                     status.innerHTML = `<span class="geo-success"><i class="fas fa-check-circle"></i> Localização gravada!</span>`;
                 },
-                () => {
-                    status.innerText = "Erro ao obter localização. Por favor, digite o endereço abaixo.";
-                }
+                (error) => {
+                    let msg = "Erro ao obter localização.";
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            msg = "Permissão negada. Ative nas configurações.";
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            msg = "Sinal de GPS indisponível.";
+                            break;
+                        case error.TIMEOUT:
+                            msg = "Tempo esgotado. Tente novamente.";
+                            break;
+                    }
+                    status.innerText = msg;
+                    // Fallback manual input focus
+                    document.getElementById('address-text').focus();
+                },
+                options
             );
         }
 
