@@ -693,12 +693,20 @@
 
                 <div class="form-group">
                     <label class="form-label">Pagamento</label>
-                    <select id="payment-method" class="form-select" onchange="toggleChangeField(this.value)">
+                    <select id="payment-method" class="form-select" onchange="togglePaymentInfo(this.value)">
                         <option value="PIX">PIX (Agilidade)</option>
                         <option value="Cartão de Crédito">Cartão de Crédito</option>
                         <option value="Cartão de Débito">Cartão de Débito</option>
                         <option value="Dinheiro">Dinheiro</option>
                     </select>
+                </div>
+
+                <!-- Aviso PIX (Visível por padrão pois PIX é a 1ª opção) -->
+                <div id="pix-section" class="form-group">
+                    <div class="delivery-fee-notice" style="background-color: rgba(37, 211, 102, 0.1); border-color: var(--whatsapp); color: var(--text-main);">
+                        <i class="fas fa-qrcode" style="font-size: 24px; color: var(--whatsapp);"></i>
+                        <span style="font-size: 12px; line-height: 1.4;">A chave PIX será enviada no WhatsApp após conferência do valor. <br><strong>O envio/retirada depende do comprovante.</strong></span>
+                    </div>
                 </div>
 
                 <!-- Campo de Troco Dinâmico -->
@@ -1004,12 +1012,20 @@
             if (show) el.classList.remove('hidden'); else el.classList.add('hidden');
         }
 
-        function toggleChangeField(value) {
+        /* Nova função para controlar campos de pagamento */
+        function togglePaymentInfo(value) {
             const changeSection = document.getElementById('change-section');
+            const pixSection = document.getElementById('pix-section');
+            
+            // Esconde tudo primeiro
+            changeSection.classList.add('hidden');
+            pixSection.classList.add('hidden');
+
+            // Mostra o relevante
             if (value === 'Dinheiro') {
                 changeSection.classList.remove('hidden');
-            } else {
-                changeSection.classList.add('hidden');
+            } else if (value === 'PIX') {
+                pixSection.classList.remove('hidden');
             }
         }
 
