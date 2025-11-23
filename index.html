@@ -213,40 +213,30 @@
         .ai-btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(118, 75, 162, 0.6); }
         .ai-btn:active { transform: scale(0.95); }
 
-        /* --- CATEGORIAS (ATUALIZADO PARA EXIBIR TUDO) --- */
+        /* --- CATEGORIAS COMPACTAS --- */
         .category-nav {
             position: sticky;
-            top: 60px;
+            top: 60px; /* Ajustado para header menor */
             background-color: var(--bg-body);
             z-index: 90;
-            padding: 10px 0;
-            /* Alterado para não rolar lateralmente */
-            overflow-x: visible; 
-            white-space: normal;
+            padding: 8px 0;
+            overflow-x: auto;
+            white-space: nowrap;
             transition: background-color 0.3s;
-            border-bottom: 1px solid var(--border-color);
+            mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
         }
-        .category-list { 
-            display: flex; 
-            flex-wrap: wrap; /* Permite quebra de linha */
-            justify-content: center; /* Centraliza os itens */
-            gap: 8px; 
-            padding: 5px 5px; 
-            list-style: none; 
-        }
+        .category-list { display: flex; gap: 8px; padding: 2px 15px; list-style: none; }
         .cat-btn {
             background: var(--bg-element); 
             border: 1px solid transparent; 
             color: var(--text-muted);
-            padding: 8px 16px;
+            padding: 6px 16px; /* Mais compacto */
             border-radius: 20px; 
             font-size: 13px; 
             font-weight: 600;
             transition: all 0.3s;
             white-space: nowrap;
-            display: flex; /* Para alinhar ícone e texto */
-            align-items: center;
-            gap: 6px;
         }
         .cat-btn:hover { color: var(--text-main); background: var(--bg-card); }
         .cat-btn.active { background: var(--primary); color: #000; box-shadow: 0 2px 10px rgba(255, 159, 28, 0.3); transform: scale(1.02); }
@@ -825,9 +815,9 @@
             { id: 26, name: "Pastel Carne (G)", price: 14.00, category: "pasteis", desc: "Tamanho Grande." },
             { id: 27, name: "Pastel Frango/Queijo (P)", price: 12.00, category: "pasteis", desc: "Tamanho Pequeno." },
             { id: 28, name: "Pastel Frango/Queijo (G)", price: 14.00, category: "pasteis", desc: "Tamanho Grande." },
-            { id: 29, name: "Batata Frita (P)", price: 15.00, category: "bebidas", desc: "Porção Pequena." },
-            { id: 30, name: "Batata Frita (G)", price: 20.00, category: "bebidas", desc: "Porção Grande." },
-            { id: 31, name: "Batata Recheada", price: 35.00, category: "bebidas", desc: "Batata frita, bacon e calabresa." },
+            { id: 29, name: "Batata Frita (P)", price: 15.00, category: "porcoes", desc: "Porção Pequena." },
+            { id: 30, name: "Batata Frita (G)", price: 20.00, category: "porcoes", desc: "Porção Grande." },
+            { id: 31, name: "Batata Recheada", price: 35.00, category: "porcoes", desc: "Batata frita, bacon e calabresa." },
             { id: 32, name: "Sucos Naturais", price: 0.00, category: "bebidas", desc: "Valores a consultar." },
             { id: 33, name: "Refrigerante Lata", price: 0.00, category: "bebidas", desc: "350ml. Sabor a combinar.", keywords: ["coca", "cola", "fanta", "guarana", "guaraná", "pepsi", "sprite", "sukita", "kuat", "soda", "antarctica"] },
             { id: 34, name: "Refrigerante 1 Litro", price: 0.00, category: "bebidas", desc: "Sabor a combinar.", keywords: ["coca", "cola", "fanta", "guarana", "guaraná", "pepsi", "sprite", "sukita", "kuat", "soda", "antarctica"] },
@@ -841,7 +831,8 @@
             { id: 'especiais', label: 'Especiais', icon: 'fas fa-star' },
             { id: 'hotdogs', label: 'Hot Dogs', icon: 'fas fa-hotdog' },
             { id: 'pasteis', label: 'Pastéis', icon: 'fas fa-cheese' },
-            { id: 'bebidas', label: 'Bebidas', icon: 'fas fa-glass-water' } // "Acompanhamentos" abreviado para caber melhor
+            { id: 'porcoes', label: 'Batatas', icon: 'fas fa-utensils' }, // Nova Categoria
+            { id: 'bebidas', label: 'Bebidas', icon: 'fas fa-glass-water' }
         ];
 
         let cart = [];
