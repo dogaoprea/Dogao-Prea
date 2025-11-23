@@ -704,7 +704,7 @@
                 <!-- Campo de Troco Dinâmico -->
                 <div id="change-section" class="form-group hidden">
                     <label class="form-label">Troco para quanto?</label>
-                    <input type="text" id="change-amount" class="form-input" placeholder="Ex: 50,00">
+                    <input type="tel" id="change-amount" class="form-input" placeholder="Ex: 50" oninput="this.value = this.value.replace(/[^0-9.,]/g, '')">
                 </div>
 
                 <button class="btn btn-whatsapp" onclick="finalizeOrder()">
