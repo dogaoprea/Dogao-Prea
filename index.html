@@ -546,7 +546,7 @@
             <div id="checkout-form" style="display: none;">
                 <!-- Campo de Observações Gerais REMOVIDO -->
                 <div class="form-group">
-                    <label class="form-label">Seu Nome</label>
+                    <label class="form-label">Seu nome</label>
                     <input type="text" id="customer-name" class="form-input" placeholder="Como podemos te chamar?">
                 </div>
                 <div class="form-group">
@@ -1064,6 +1064,8 @@
                     const item = bigItems[Math.floor(Math.random() * bigItems.length)];
                     responseText = `Se a fome é de leão 🦁, vai de **${item.name}**! É gigante e custa R$ ${item.price.toFixed(2).replace('.',',')}.`;
                     suggestedItemId = item.id;
+                } else if (msg.includes('sem bacon') || msg.includes('tirar bacon') || msg.includes('não gosto de bacon')) {
+                    responseText = "Entendido! Nada de bacon então. 🚫🥓 Que tal experimentar nosso **X-Salada** ou um **Frango Simples**? São deliciosos e mais leves!";
                 } else if (msg.includes('bacon')) {
                     const baconItems = menuData.filter(i => i.name.toLowerCase().includes('bacon'));
                     const item = baconItems[Math.floor(Math.random() * baconItems.length)];
@@ -1083,6 +1085,12 @@
                     responseText = "As nossas entregas levam de **30 a 60 minutos** 🛵. A taxa de entrega é calculada no WhatsApp dependendo da sua localização.";
                 } else if (msg.includes('pagamento') || msg.includes('pagar') || msg.includes('pix') || msg.includes('cartão') || msg.includes('dinheiro') || msg.includes('aceita')) {
                     responseText = "Aceitamos **PIX, Cartão de Crédito/Débito e Dinheiro**. 💳💸 \n⚠️ Para pagamentos em cartão, há uma pequena tarifa da maquininha.";
+                } else if (msg.includes('horário') || msg.includes('horario') || msg.includes('abre') || msg.includes('fecha')) {
+                    responseText = "⏰ Estamos abertos **todos os dias**, das **19h00 às 00h00**. Se a fome bater nesse horário, é só chamar!";
+                } else if (msg.includes('onde') || msg.includes('fica') || msg.includes('endereço') || msg.includes('local')) {
+                    responseText = "📍 Estamos localizados na **Estrada da Caiçara, S/N - Cavalo Bravo, Cruz - CE**. Pode vir que é sucesso!";
+                } else if (msg.includes('atendente') || msg.includes('humano') || msg.includes('falar com') || msg.includes('ajuda') || msg.includes('problema') || msg.includes('duvida')) {
+                    responseText = "Sem problemas! Se precisar de ajuda humana, clique no botão abaixo para chamar no WhatsApp: <br><br> <a href='https://wa.me/5588996768158' target='_blank' style='display: inline-flex; align-items: center; gap: 8px; background-color: #25D366; color: #fff; padding: 10px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; margin-top: 5px; box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3); transition: transform 0.2s;' onmouseover='this.style.transform=\"scale(1.05)\"' onmouseout='this.style.transform=\"scale(1)\"'><i class='fab fa-whatsapp' style='font-size: 18px;'></i> Falar com Atendente</a>";
                 } else {
                     const randomItem = menuData[Math.floor(Math.random() * menuData.length)];
                     responseText = `Hummm... que tal experimentar um **${randomItem.name}**? É um dos meus favoritos! 😋`;
