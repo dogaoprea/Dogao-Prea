@@ -581,7 +581,7 @@
                 <div class="suggestion-items" id="suggestion-list"></div>
             </div>
             <button id="btn-add-more" class="btn-outline" onclick="toggleCart()" style="display: none;"><i class="fas fa-plus"></i> Adicionar mais itens</button>
-            <div class="cart-total brand-font" id="modal-total">Total: R$ 0,00</div>
+            <div class="cart-total brand-font" id="modal-total">Subtotal: R$ 0,00</div>
             
             <div id="checkout-form" style="display: none;">
                 <!-- Campo de Observações Gerais REMOVIDO -->
@@ -953,7 +953,7 @@
                     </div>`
                 }).join('');
             }
-            document.getElementById('modal-total').innerText = `Total: R$ ${totalPrice.toFixed(2).replace('.',',')}`;
+            document.getElementById('modal-total').innerText = `Subtotal: R$ ${totalPrice.toFixed(2).replace('.',',')}`;
 
             const hasFood = cart.some(i => ['sanduiches', 'especiais', 'hotdogs', 'pasteis', 'porcoes'].includes(i.category));
             const hasDrink = cart.some(i => i.category === 'bebidas');
