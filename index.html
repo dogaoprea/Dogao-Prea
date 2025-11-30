@@ -82,10 +82,11 @@
             transition: background-color 0.3s, color 0.3s;
         }
 
-        /* CLASSE PARA TRAVAR ROLAGEM */
+        /* CLASSE PARA TRAVAR ROLAGEM - Corrigido para evitar bugs com teclado */
         body.no-scroll {
             overflow: hidden;
-            height: 100vh;
+            /* height: 100vh; <- REMOVIDO: Causava conflito com o teclado virtual */
+            position: relative; /* Ajuda a manter a estabilidade */
         }
 
         h1, h2, h3, .brand-font {
@@ -345,7 +346,13 @@
         .cart-count { background: #000; color: var(--primary); padding: 2px 8px; border-radius: 20px; font-size: 12px; margin-left: 0; }
 
         /* --- MODAL --- */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 2000; display: flex; justify-content: center; align-items: flex-end; opacity: 0; pointer-events: none; transition: 0.3s; }
+        .modal-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.8); /* Aumentado para 0.8 para cobrir melhor sem o blur */
+            /* backdrop-filter: blur(5px); <- REMOVIDO: Causava a tela preta/pisca ao abrir teclado */
+            z-index: 2000; display: flex; justify-content: center; align-items: flex-end; 
+            opacity: 0; pointer-events: none; transition: 0.3s; 
+        }
         .modal-overlay.open { opacity: 1; pointer-events: all; }
         .modal-content { background: var(--bg-card); width: 100%; max-width: 600px; height: 90vh; border-radius: 20px 20px 0 0; padding: 20px; display: flex; flex-direction: column; transform: translateY(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow-y: auto; color: var(--text-main); box-shadow: 0 -10px 40px rgba(0,0,0,0.3); padding-bottom: 100px; }
         .modal-overlay.open .modal-content { transform: translateY(0); }
@@ -883,7 +890,7 @@
                                 <button class="qty-btn" onclick="updateQty(${item.id}, 1)"><i class="fas fa-plus"></i></button>
                             </div>
                         </div>
-                        <input type="text" class="item-obs-input" placeholder="Alguma observação? Ex: Sem cebola..." value="${obsValue}" oninput="updateItemObs(${item.id}, this.value)">
+                        <input type="text" class="item-obs-input" placeholder="Alguma observação? Ex: Sem cebola..." value="${obsValue}" oninput="updateItemObs(${item.id}, this.value)" onclick="event.stopPropagation()">
                     </div>`
                 }).join('');
             }
