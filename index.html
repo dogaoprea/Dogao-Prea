@@ -354,7 +354,8 @@
             opacity: 0; pointer-events: none; transition: 0.3s; 
         }
         .modal-overlay.open { opacity: 1; pointer-events: all; }
-        .modal-content { background: var(--bg-card); width: 100%; max-width: 600px; height: 90vh; border-radius: 20px 20px 0 0; padding: 20px; display: flex; flex-direction: column; transform: translateY(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow-y: auto; color: var(--text-main); box-shadow: 0 -10px 40px rgba(0,0,0,0.3); padding-bottom: 100px; }
+        /* Aumentei padding-bottom para 40vh para dar espaço ao teclado */
+        .modal-content { background: var(--bg-card); width: 100%; max-width: 600px; height: 90vh; border-radius: 20px 20px 0 0; padding: 20px; display: flex; flex-direction: column; transform: translateY(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow-y: auto; color: var(--text-main); box-shadow: 0 -10px 40px rgba(0,0,0,0.3); padding-bottom: 40vh; }
         .modal-overlay.open .modal-content { transform: translateY(0); }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
         .close-modal { background: var(--bg-element); border: none; color: var(--text-main); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; font-size: 18px; }
@@ -736,6 +737,19 @@
             renderMenu();
             initChat(); 
             // setupMobileKeyboardFix(); <- REMOVIDO PARA EVITAR O BUG DE PISCAR
+            
+            // NOVO FIX: Garante que o input fique visível ao abrir o teclado
+            const checkoutForm = document.getElementById('checkout-form');
+            if (checkoutForm) {
+                checkoutForm.addEventListener('focusin', (e) => {
+                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                        setTimeout(() => {
+                            e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }, 400); // Tempo para o teclado subir totalmente
+                    }
+                });
+            }
+
             setInterval(checkOpenStatus, 60000);
         };
 
