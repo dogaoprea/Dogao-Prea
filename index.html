@@ -738,7 +738,7 @@
             initChat(); 
             // setupMobileKeyboardFix(); <- REMOVIDO PARA EVITAR O BUG DE PISCAR
             
-            // NOVO FIX: Garante que o input fique visível ao abrir o teclado
+            // NOVO FIX: Garante que o input fique visível ao abrir o teclado (Checkout)
             const checkoutForm = document.getElementById('checkout-form');
             if (checkoutForm) {
                 checkoutForm.addEventListener('focusin', (e) => {
@@ -747,6 +747,17 @@
                             e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }, 400); // Tempo para o teclado subir totalmente
                     }
+                });
+            }
+
+            // FIX ESPECÍFICO PARA O CHAT: Garante que o campo de digitação suba
+            const chatInput = document.getElementById('chat-input');
+            if (chatInput) {
+                chatInput.addEventListener('focus', () => {
+                    setTimeout(() => {
+                        // Tenta rolar o input para o centro da área visível
+                        chatInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 400);
                 });
             }
 
