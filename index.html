@@ -995,10 +995,11 @@
             if (!typeRadio) return alert("Escolha o tipo de pedido.");
             if (!paymentElement) return alert("Escolha a forma de pagamento.");
             
-            // GERA O ID ÚNICO COM BASE NO HORÁRIO (APENAS HORA E MINUTO)
+            // GERA O ID ÚNICO COM BASE NO HORÁRIO (HORA, MINUTO E SEGUNDO)
             const now = new Date();
             const orderId = String(now.getHours()).padStart(2, '0') + 
-                           String(now.getMinutes()).padStart(2, '0');
+                           String(now.getMinutes()).padStart(2, '0') +
+                           String(now.getSeconds()).padStart(2, '0');
 
             const payment = paymentElement.value;
             const changeAmount = document.getElementById('change-amount').value;
