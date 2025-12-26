@@ -223,16 +223,43 @@
         .ai-btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(118, 75, 162, 0.6); }
         .ai-btn:active { transform: scale(0.95); }
 
-        /* --- CATEGORIAS --- */
-        .category-nav { padding: 0 0 10px 0; overflow-x: visible; white-space: normal; }
-        .category-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding: 0 5px; list-style: none; }
+        /* --- CATEGORIAS (COM ROLAGEM LATERAL) --- */
+        .category-nav { 
+            padding: 5px 0 10px 0; 
+            overflow-x: auto; /* Habilita rolagem horizontal */
+            white-space: nowrap; 
+            -webkit-overflow-scrolling: touch; /* Rolagem suave no iOS */
+            scrollbar-width: none; /* Oculta barra de rolagem no Firefox */
+        }
+        .category-nav::-webkit-scrollbar { display: none; } /* Oculta barra de rolagem no Chrome/Safari */
+
+        .category-list { 
+            display: flex; 
+            flex-wrap: nowrap; /* Impede quebra de linha */
+            justify-content: flex-start; /* Alinha no início */
+            gap: 10px; 
+            padding-left: 15px; /* Margem esquerda igual ao container */
+            padding-right: 0; /* Remove padding direito direto (usaremos ::after) */
+            list-style: none; 
+        }
+        
+        /* Elemento invisível para garantir o espaçamento final na rolagem */
+        .category-list::after {
+            content: '';
+            display: block;
+            padding-right: 15px; /* Margem direita igual ao container */
+            height: 1px; /* Ocupa espaço mínimo */
+        }
+        
         .cat-btn {
             background: var(--bg-element); border: 1px solid transparent; color: var(--text-muted);
-            padding: 8px 14px; border-radius: 12px; font-size: 12px; font-weight: 600;
+            padding: 8px 16px; border-radius: 20px; /* Mais arredondado */
+            font-size: 13px; font-weight: 600;
             transition: all 0.3s; white-space: nowrap; display: flex; align-items: center; gap: 6px;
-            flex-grow: 1; justify-content: center; min-width: auto;
+            flex-shrink: 0; /* Garante que o botão não encolha */
+            min-width: auto;
         }
-        @media (max-width: 360px) { .cat-btn { padding: 6px 10px; font-size: 11px; } }
+        @media (max-width: 360px) { .cat-btn { padding: 6px 12px; font-size: 12px; } }
         .cat-btn:hover { color: var(--text-main); background: var(--bg-card); }
         .cat-btn.active { background: var(--primary); color: #000; box-shadow: 0 2px 8px rgba(255, 159, 28, 0.3); transform: scale(1.02); }
 
